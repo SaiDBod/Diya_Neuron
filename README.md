@@ -3,6 +3,7 @@ Light illumination device for cells cultured in multiwell plates or culture dish
 
 ## hardware
 - CAD files for hardware designs
+- More_CAD contains files for Adafruit 64x64 P3 board and a container for the controller
 - Assembly instructions
 
 ## software
