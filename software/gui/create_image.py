@@ -86,7 +86,7 @@ def customShapeLEDpos(customShape):
     return leds_pos
 
 
-def getAnimationColors(waveType, color, stepLength, framerate, wvMax, wvMin = None, wvStart = None, wvLen = None, dutyCyclePWM = None, periodPWM = None):
+def getAnimationColors(waveType, color, stepLength, framerate, wvMax, wvMin = None, wvStart = None, wvLen = None, dutyCyclePWM = None, periodPWM = None, rgb_values = None):
     # Const
     intensitys = []
     rgbValues = []
@@ -156,14 +156,38 @@ def getAnimationColors(waveType, color, stepLength, framerate, wvMax, wvMin = No
             intensitys.append(dp)
             dp -= diff/(len(time)-1)
 
-    for i in range(len(intensitys)):
-        rgb = ()
+    # for i in range(len(intensitys)):
+    #     rgb = ()
+    #     if color == 'Red':
+    #         rgb = (round(intensitys[i]), 0, 0)
+    #     elif color == 'Green':
+    #         rgb = (0, round(intensitys[i]), 0)
+    #     elif color == 'Blue':
+    #         rgb = (0, 0, round(intensitys[i]))
+    #     elif color == 'Multicolor':
+    #         rgb = (round(intensitys[i]), round(intensitys[i]), round(intensitys[i]))
+    #     rgbValues.append(rgb)
+
+    # return rgbValues
+
+    for intensity in intensitys:
         if color == 'Red':
-            rgb = (round(intensitys[i]), 0, 0)
+            rgb = (round(intensity), 0, 0)
         elif color == 'Green':
-            rgb = (0, round(intensitys[i]), 0)
+            rgb = (0, round(intensity), 0)
         elif color == 'Blue':
-            rgb = (0, 0, round(intensitys[i]))
+            rgb = (0, 0, round(intensity))
+        elif color == 'Multicolor' and rgb_values is not None:
+            red, green, blue = rgb_values
+
+            rgb = (
+                round(intensity * red / 255),
+                round(intensity * green / 255),
+                round(intensity * blue / 255)
+            )
+        else:
+            rgb = (0, 0, 0)
+
         rgbValues.append(rgb)
 
     return rgbValues
@@ -246,6 +270,7 @@ def createImage(plateinfo, TL, filename, caliKi, maxIntensity, customShape = Non
 
     for well in plateinfo['Plate 1 Wells']:
         color = plateinfo['Plate 1 Wells'][well]['color']
+        rgb_values = plateinfo[step][1]['Plate 1 Wells'][well].get('rgb_values')
         position = plateinfo['Plate 1 Wells'][well]['position']
         if maxIntensity:
             intensity = plateinfo['Plate 1 Wells'][well]['maxVal']
@@ -266,6 +291,7 @@ def createImage(plateinfo, TL, filename, caliKi, maxIntensity, customShape = Non
 
     for well in plateinfo['Plate 2 Wells']:
         color = plateinfo['Plate 2 Wells'][well]['color']
+        rgb_values = plateinfo[step][1]['Plate 2 Wells'][well].get('rgb_values')
         position = plateinfo['Plate 2 Wells'][well]['position']
 
         if maxIntensity:
@@ -308,6 +334,7 @@ def createFrames(plateinfo, TL, framerate, path, caliKi, video = False, customSh
         for well in plateinfo[step][1]['Plate 1 Wells']:
             wvType = plateinfo[step][1]['Plate 1 Wells'][well]['waveType']
             color = plateinfo[step][1]['Plate 1 Wells'][well]['color']
+            rgb_values = plateinfo[step][1]['Plate 1 Wells'][well].get('rgb_values')
             wvMax = plateinfo[step][1]['Plate 1 Wells'][well]['maxVal']
             position = plateinfo[step][1]['Plate 1 Wells'][well]['position']
             wvMin = None
@@ -324,10 +351,11 @@ def createFrames(plateinfo, TL, framerate, path, caliKi, video = False, customSh
             if wvType == 'pwm':
                 periodPWM = plateinfo[step][1]['Plate 1 Wells'][well]['periodPWM']
                 dutyCyclePWM = plateinfo[step][1]['Plate 1 Wells'][well]['dutyCyclePWM']
-            positionColorP1[position] = getAnimationColors(wvType, color, stepLength, framerate, wvMax, wvMin, wvStart, wvLen, dutyCyclePWM, periodPWM)
+            positionColorP1[position] = getAnimationColors(wvType, color, stepLength, framerate, wvMax, wvMin, wvStart, wvLen, dutyCyclePWM, periodPWM, rgb_values= rgb_values)
         for well in plateinfo[step][1]['Plate 2 Wells']:
             wvType = plateinfo[step][1]['Plate 2 Wells'][well]['waveType']
             color = plateinfo[step][1]['Plate 2 Wells'][well]['color']
+            rgb_values = plateinfo[step][1]['Plate 2 Wells'][well].get('rgb_values')
             wvMax = plateinfo[step][1]['Plate 2 Wells'][well]['maxVal']
             position = plateinfo[step][1]['Plate 2 Wells'][well]['position']
             wvMin = None
@@ -344,7 +372,7 @@ def createFrames(plateinfo, TL, framerate, path, caliKi, video = False, customSh
             if wvType == 'pwm':
                 periodPWM = plateinfo[step][1]['Plate 2 Wells'][well]['periodPWM']
                 dutyCyclePWM = plateinfo[step][1]['Plate 2 Wells'][well]['dutyCyclePWM']
-            positionColorP2[position] = getAnimationColors(wvType, color, stepLength, framerate, wvMax, wvMin, wvStart, wvLen, dutyCyclePWM, periodPWM)
+            positionColorP2[position] = getAnimationColors(wvType, color, stepLength, framerate, wvMax, wvMin, wvStart, wvLen, dutyCyclePWM, periodPWM, rgb_values= rgb_values)
         for frame in range(frameAmount):
             filename = path + '/step-' + str(step) + '-frame-' + str(frame) + '.tiff'
             turned_on_wells = []

@@ -175,6 +175,7 @@ class well_buttons(QWidget):#
         self.color_chooser.addItem("Red")
         self.color_chooser.addItem("Green")
         self.color_chooser.addItem("Blue")
+        self.color_chooser.addItem("Multicolor")
         self.color_chooser.setCurrentText(self.color)
         self.color_chooser.currentIndexChanged.connect(self.changeWavetype)
 
@@ -562,7 +563,11 @@ class well_buttons(QWidget):#
         if self.color_chooser.currentIndex() == 0:
             self.waveTypeCB.setDisabled(True)
         else:
-            self.pen = pg.mkPen(color=self.color_chooser.currentText().lower(), width=2)
+            #self.pen = pg.mkPen(color=self.color_chooser.currentText().lower(), width=2)
+            if self.color_chooser.currentText() == "Multicolor":
+                self.pen = pg.mkPen(color=(180, 0, 180), width=2)
+            else:
+                self.pen = pg.mkPen(color=self.color_chooser.currentText().lower(), width=2)
             self.waveTypeCB.setDisabled(False)
             if self.waveTypeCB.currentIndex() in {1, 2, 3, 5, 6}:
                 self.ParameterFormlayout.addRow(QLabel('Max. Intensity: '), self.maxIntensitySB)
@@ -581,7 +586,23 @@ class well_buttons(QWidget):#
                 self.ParameterFormlayout.addRow(QLabel('Period: '), self.periodPWMSB)
             if self.waveTypeCB.currentIndex() in {1, 2, 3, 4}:
                 self.ParameterFormlayout.addRow(QLabel('Starting Intensity: '), self.startAnimationCB)
-            
+        # RGB controls for Multicolor mode
+        self.redIntensitySB = QSpinBox()
+        self.greenIntensitySB = QSpinBox()
+        self.blueIntensitySB = QSpinBox()
+
+        for spinbox in (self.redIntensitySB,self.greenIntensitySB,self.blueIntensitySB):
+            spinbox.setRange(0, 255)
+
+        self.redIntensitySB.setValue(255)
+        self.greenIntensitySB.setValue(0)
+        self.blueIntensitySB.setValue(255)
+
+        if self.color_chooser.currentText() == "Multicolor":
+            self.ParameterFormlayout.addRow(QLabel("Red (0-255):"), self.redIntensitySB)
+            self.ParameterFormlayout.addRow(QLabel("Green (0-255):"), self.greenIntensitySB)
+            self.ParameterFormlayout.addRow(QLabel("Blue (0-255):"), self.blueIntensitySB)
+        #end of multicolor    
         self.showPlotCB = QCheckBox()
         self.showPlotCB.stateChanged.connect(self.showPlot)
 
@@ -981,6 +1002,12 @@ class well_buttons(QWidget):#
             elif self.color_chooser.currentIndex() == 3:
                 button_color = (0, 0, int(sqrt(self.maxIntensitySB.value()) * 15.99))
                 light_button_color = (153, 204, 255)
+            elif self.color_chooser.currentText() == "Multicolor": # adding multicolor
+                red = self.redIntensitySB.value()
+                green = self.greenIntensitySB.value()
+                blue = self.blueIntensitySB.value()
+                button_color = (red, green, blue)
+                light_button_color = (red, green, blue)
             
             for selected_well in self.selected_wells:
                 if self.waveTypeCB.currentIndex() == 0:
@@ -988,6 +1015,11 @@ class well_buttons(QWidget):#
                         'waveType': 'const',
                         'color': self.color_chooser.currentText(),
                         'maxVal': self.maxIntensitySB.value(),
+                        'rgb_values': ( #rgb time
+                            self.redIntensitySB.value(),
+                            self.greenIntensitySB.value(),
+                            self.blueIntensitySB.value()
+                        ) if self.color_chooser.currentText() == "Multicolor" else None,
                         'position': None,
                         'button_color': button_color,
                         'Icon': None}
@@ -999,6 +1031,11 @@ class well_buttons(QWidget):#
                         'minVal': self.minIntensitySB.value(),
                         'wvLen': self.wavelengthSB.value(),
                         'start': self.startAnimationCB.currentText(),
+                        'rgb_values': ( #rgb time
+                            self.redIntensitySB.value(),
+                            self.greenIntensitySB.value(),
+                            self.blueIntensitySB.value()
+                        ) if self.color_chooser.currentText() == "Multicolor" else None,
                         'position': None,
                         'button_color': light_button_color,
                         'Icon': os.path.join(basedir, 'resources', 'animation-sin.svg')}
@@ -1010,6 +1047,11 @@ class well_buttons(QWidget):#
                         'minVal': self.minIntensitySB.value(),
                         'wvLen': self.wavelengthSB.value(),
                         'start': self.startAnimationCB.currentText(),
+                        'rgb_values': ( #rgb time
+                            self.redIntensitySB.value(),
+                            self.greenIntensitySB.value(),
+                            self.blueIntensitySB.value()
+                        ) if self.color_chooser.currentText() == "Multicolor" else None,
                         'position': None,
                         'button_color': light_button_color,
                         'Icon': os.path.join(basedir, 'resources', 'animation-tri.svg')}
@@ -1021,6 +1063,11 @@ class well_buttons(QWidget):#
                         'minVal': self.minIntensitySB.value(),
                         'wvLen': self.wavelengthSB.value(),
                         'start': self.startAnimationCB.currentText(),
+                        'rgb_values': ( #rgb time
+                            self.redIntensitySB.value(),
+                            self.greenIntensitySB.value(),
+                            self.blueIntensitySB.value()
+                        ) if self.color_chooser.currentText() == "Multicolor" else None,
                         'position': None,
                         'button_color': light_button_color,
                         'Icon': os.path.join(basedir, 'resources', 'animation-sq.svg')}
@@ -1032,6 +1079,11 @@ class well_buttons(QWidget):#
                         'dutyCyclePWM': self.dutyCycleSB.value() / 100,
                         'periodPWM': self.periodPWMSB.value(),
                         'start': self.startAnimationCB.currentText(),
+                        'rgb_values': ( #rgb time
+                            self.redIntensitySB.value(),
+                            self.greenIntensitySB.value(),
+                            self.blueIntensitySB.value()
+                        ) if self.color_chooser.currentText() == "Multicolor" else None,
                         'position': None,
                         'button_color': light_button_color,
                         'Icon': os.path.join(basedir, 'resources', 'animation-blink.svg')}
@@ -1041,6 +1093,11 @@ class well_buttons(QWidget):#
                         'color': self.color_chooser.currentText(),
                         'maxVal': self.maxIntensitySB.value(),
                         'minVal': self.minIntensitySB.value(),
+                        'rgb_values': ( #rgb time
+                            self.redIntensitySB.value(),
+                            self.greenIntensitySB.value(),
+                            self.blueIntensitySB.value()
+                        ) if self.color_chooser.currentText() == "Multicolor" else None,
                         'position': None,
                         'button_color': light_button_color,
                         'Icon': os.path.join(basedir, 'resources', 'animation-rise.svg')}
@@ -1050,6 +1107,11 @@ class well_buttons(QWidget):#
                         'color': self.color_chooser.currentText(),
                         'maxVal': self.maxIntensitySB.value(),
                         'minVal': self.minIntensitySB.value(),
+                        'rgb_values': ( #rgb time
+                            self.redIntensitySB.value(),
+                            self.greenIntensitySB.value(),
+                            self.blueIntensitySB.value()
+                        ) if self.color_chooser.currentText() == "Multicolor" else None,
                         'position': None,
                         'button_color': light_button_color,
                         'Icon': os.path.join(basedir, 'resources', 'animation-fall.svg')}
