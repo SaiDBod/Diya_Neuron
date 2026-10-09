@@ -34,9 +34,9 @@ class well_buttons(QWidget):#
         self.wvMax = 255
         self.wvMin = 0
         self.wvStart = 'Low'
-        self.wvLen = 10
+        self.wvLen = 20
         self.dutyCyclePWM = 0.5
-        self.periodPWM = 10
+        self.periodPWM = 20
 
         self.framerate = framerate
 
@@ -536,8 +536,8 @@ class well_buttons(QWidget):#
         self.maxIntensitySlider.valueChanged.connect(self.updatePlot)
 
         self.wavelengthSB = QSpinBox()
-        self.wavelengthSB.setSuffix(' min')
-        self.wavelengthSB.setMinimum(1)
+        self.wavelengthSB.setSuffix(' ms')
+        self.wavelengthSB.setRange(20, 6000000)
         self.wavelengthSB.setValue(self.wvLen)
         self.wavelengthSB.valueChanged.connect(lambda ignore: self.updatePlot())
 
@@ -555,8 +555,9 @@ class well_buttons(QWidget):#
         self.dutyCycleSB.valueChanged.connect(lambda ignore: self.updatePlot())
 
         self.periodPWMSB = QSpinBox()
-        self.periodPWMSB.setSuffix(' min')
-        self.periodPWMSB.setMinimum(1)
+        self.periodPWMSB.setSuffix(' ms')
+        #self.periodPWMSB.setMinimum(20)
+        self.periodPWMSB.setRange(20, 6000000)
         self.periodPWMSB.setValue(self.periodPWM)
         self.periodPWMSB.valueChanged.connect(lambda ignore: self.updatePlot())
 
@@ -626,7 +627,7 @@ class well_buttons(QWidget):#
         self.wvStart = self.startAnimationCB.currentText()
         self.wvLen = self.wavelengthSB.value()
         self.dutyCyclePWM = (self.dutyCycleSB.value() / 100)
-        self.periodPWM = self.periodPWMSB.value()
+        self.periodPWM = (self.periodPWMSB.value())
 
         try:
             stepLength = self.StepInformations[self.selceted_step][0][0] * 60 + \
@@ -648,12 +649,12 @@ class well_buttons(QWidget):#
             # Sine
             elif self.waveTypeCB.currentIndex() == 1:
                 a = (self.wvMax - self.wvMin) / 2
-                b = 2 * np.pi / self.wvLen
+                b = 2 * np.pi / (self.wvLen/60000)
                 d = a + self.wvMin
                 if self.wvStart == 'Low':
-                    c = - (self.wvLen/4)
+                    c = - ((self.wvLen/60000)/4)
                 elif self.wvStart == 'High':
-                    c = (self.wvLen/4)
+                    c = ((self.wvLen/60000)/4)
 
                 time = np.arange(0, stepLength, self.framerate)    
                 wave = a * np.sin(b * (time + c)) + d
@@ -685,12 +686,12 @@ class well_buttons(QWidget):#
                 a = (self.wvMax - self.wvMin) / 2
                 d = a + self.wvMin
                 if self.wvStart == 'Low':
-                    c = - (self.wvLen/4)
+                    c = - ((self.wvLen/60000)/4)
                 elif self.wvStart == 'High':
-                    c = (self.wvLen/4)
+                    c = ((self.wvLen/60000)/4)
 
                 time = np.arange(0, stepLength, self.framerate)    
-                wave = (4 * a/self.wvLen * abs(((time + c - self.wvLen/4) % self.wvLen) - self.wvLen/2) - a) + d
+                wave = (4 * a/(self.wvLen/60000) * abs(((time + c - (self.wvLen/60000)/4) % self.wvLen) - (self.wvLen/60000)/2) - a) + d
 
                 for i in range(len(time)):
                     if i == 0:
@@ -717,10 +718,10 @@ class well_buttons(QWidget):#
             # Square / PWM
             elif self.waveTypeCB.currentIndex() in {3, 4}:
 
-                TimePeriod = self.periodPWM
+                TimePeriod = (self.periodPWM/60000)
                 percent = self.dutyCyclePWM
                 if self.waveTypeCB.currentIndex() == 3:
-                    TimePeriod = self.wvLen
+                    TimePeriod = (self.wvLen/60000)
                     percent = 0.5
 
                 time = np.arange(0, stepLength, self.framerate)
@@ -1029,7 +1030,7 @@ class well_buttons(QWidget):#
                         'color': self.color_chooser.currentText(),
                         'maxVal': self.maxIntensitySB.value(),
                         'minVal': self.minIntensitySB.value(),
-                        'wvLen': self.wavelengthSB.value(),
+                        'wvLen': self.wavelengthSB.value() / 60000,
                         'start': self.startAnimationCB.currentText(),
                         'rgb_values': ( #rgb time
                             self.redIntensitySB.value(),
@@ -1045,7 +1046,7 @@ class well_buttons(QWidget):#
                         'color': self.color_chooser.currentText(),
                         'maxVal': self.maxIntensitySB.value(),
                         'minVal': self.minIntensitySB.value(),
-                        'wvLen': self.wavelengthSB.value(),
+                        'wvLen': self.wavelengthSB.value() / 60000,
                         'start': self.startAnimationCB.currentText(),
                         'rgb_values': ( #rgb time
                             self.redIntensitySB.value(),
@@ -1061,7 +1062,7 @@ class well_buttons(QWidget):#
                         'color': self.color_chooser.currentText(),
                         'maxVal': self.maxIntensitySB.value(),
                         'minVal': self.minIntensitySB.value(),
-                        'wvLen': self.wavelengthSB.value(),
+                        'wvLen': self.wavelengthSB.value() / 60000,
                         'start': self.startAnimationCB.currentText(),
                         'rgb_values': ( #rgb time
                             self.redIntensitySB.value(),
@@ -1077,7 +1078,7 @@ class well_buttons(QWidget):#
                         'color': self.color_chooser.currentText(),
                         'maxVal': self.maxIntensitySB.value(),
                         'dutyCyclePWM': self.dutyCycleSB.value() / 100,
-                        'periodPWM': self.periodPWMSB.value(),
+                        'periodPWM': self.periodPWMSB.value() / 60000,
                         'start': self.startAnimationCB.currentText(),
                         'rgb_values': ( #rgb time
                             self.redIntensitySB.value(),
