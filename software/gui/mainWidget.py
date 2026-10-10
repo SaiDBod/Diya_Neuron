@@ -259,7 +259,7 @@ class well_buttons(QWidget):#
         self.pen = pg.mkPen(color='red', width=2)
 
         self.graphWidget.setBackground('w')
-        self.graphWidget.setLimits(xMin = 0, xMax = stepLength - self.framerate + (stepLength - self.framerate) * 0.05, yMin = -1, yMax = 256, minXRange = 5, minYRange = 25)
+        self.graphWidget.setLimits(xMin = 0, xMax = stepLength - self.framerate + (stepLength - self.framerate) * 0.05, yMin = -1, yMax = 256, minXRange = 0.001, minYRange = 1)
         labelStyle = {'color': 'black', 'font-size': '12pt'}
         self.graphWidget.setLabel('bottom', "Time / min", **labelStyle)
         self.graphWidget.setLabel('left', "Intensity", **labelStyle)
@@ -267,6 +267,7 @@ class well_buttons(QWidget):#
         self.graphWidget.setYRange(0, 260)
 
         self.data_line =  self.graphWidget.plot([0], [0], pen=self.pen)
+
 
     def createCurrentStepBox(self):
         self.CurrentStepGBox = QGroupBox("Step 1")

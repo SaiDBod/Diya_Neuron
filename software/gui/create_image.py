@@ -126,14 +126,25 @@ def getAnimationColors(waveType, color, stepLength, framerate, wvMax, wvMin = No
             percent = 0.5
 
         if wvStart == 'Low':
-            pwm = time % TimePeriod < TimePeriod * percent
+            #pwm = time % TimePeriod < TimePeriod * percent #too simple
+            period_frames = round(TimePeriod / framerate)
+            on_frames = round(period_frames * percent)
+
+            frame_indices = np.arange(len(time))
+            pwm = (frame_indices % period_frames) < on_frames
+
             for dp in pwm:
                 if dp:
                     intensitys.append(0)
                 else:
                     intensitys.append(wvMax)
         elif wvStart == 'High':
-            pwm = time % TimePeriod < TimePeriod * percent
+            #pwm = time % TimePeriod < TimePeriod * percent
+            period_frames = round(TimePeriod / framerate)
+            on_frames = round(period_frames * percent)
+            
+            frame_indices = np.arange(len(time))
+            pwm = (frame_indices % period_frames) < on_frames
             for dp in pwm:
                 if dp:
                     intensitys.append(wvMax)
@@ -270,7 +281,7 @@ def createImage(plateinfo, TL, filename, caliKi, maxIntensity, customShape = Non
 
     for well in plateinfo['Plate 1 Wells']:
         color = plateinfo['Plate 1 Wells'][well]['color']
-        rgb_values = plateinfo[step][1]['Plate 1 Wells'][well].get('rgb_values')
+        # rgb_values = plateinfo[step][1]['Plate 1 Wells'][well].get('rgb_values')
         position = plateinfo['Plate 1 Wells'][well]['position']
         if maxIntensity:
             intensity = plateinfo['Plate 1 Wells'][well]['maxVal']
@@ -291,7 +302,7 @@ def createImage(plateinfo, TL, filename, caliKi, maxIntensity, customShape = Non
 
     for well in plateinfo['Plate 2 Wells']:
         color = plateinfo['Plate 2 Wells'][well]['color']
-        rgb_values = plateinfo[step][1]['Plate 2 Wells'][well].get('rgb_values')
+        # rgb_values = plateinfo[step][1]['Plate 2 Wells'][well].get('rgb_values')
         position = plateinfo['Plate 2 Wells'][well]['position']
 
         if maxIntensity:
