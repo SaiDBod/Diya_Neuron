@@ -203,6 +203,9 @@ class well_buttons(QWidget):#
 
         self.changeWavetype()
 
+    def updateGradientRGBVisibility(self, color):
+        self.rgb_gradient_widget.setVisible(color == "Multicolor")
+    
     def createGradientDesingerBox(self):
         self.GradientBox = QGroupBox("Gradient")
         gradientForm_layout = QFormLayout()
@@ -212,7 +215,27 @@ class well_buttons(QWidget):#
         self.color_chooser_gradient.addItem("Red")
         self.color_chooser_gradient.addItem("Green")
         self.color_chooser_gradient.addItem("Blue")
+        self.color_chooser_gradient.addItem("Multicolor")
 
+        
+        # RGB controls for the Multicolor gradient
+        self.red_gradient = QSpinBox()
+        self.red_gradient.setRange(0, 255)
+        self.red_gradient.setValue(0)
+
+        self.green_gradient = QSpinBox()
+        self.green_gradient.setRange(0, 255)
+        self.green_gradient.setValue(0)
+
+        self.blue_gradient = QSpinBox()
+        self.blue_gradient.setRange(0, 255)
+        self.blue_gradient.setValue(255)
+
+        self.color_chooser_gradient.currentTextChanged.connect(
+            self.updateGradientRGBVisibility
+        )
+
+        
         self.width_gradient = QSpinBox()
         self.width_gradient.setMaximum(self.plate_width)
         self.width_gradient.setMinimum(2)
@@ -251,6 +274,28 @@ class well_buttons(QWidget):#
         self.apply_button_gradient.clicked.connect(self.createGradient)
         self.apply_button_gradient.setDefault(True)
         gradientForm_layout.addRow(QLabel(), self.apply_button_gradient)
+
+        #extra controls for gradient (multicolor)
+        # gradientForm_layout.addRow(QLabel('Red (0-255)'), self.red_gradient)
+        # gradientForm_layout.addRow(QLabel('Green (0-255)'), self.green_gradient)
+        # gradientForm_layout.addRow(QLabel('Blue (0-255)'), self.blue_gradient)
+
+        self.rgb_gradient_layout = QVBoxLayout()
+
+        self.rgb_gradient_layout.addWidget(QLabel("Red (0-255)"))
+        self.rgb_gradient_layout.addWidget(self.red_gradient)
+
+        self.rgb_gradient_layout.addWidget(QLabel("Green (0-255)"))
+        self.rgb_gradient_layout.addWidget(self.green_gradient)
+
+        self.rgb_gradient_layout.addWidget(QLabel("Blue (0-255)"))
+        self.rgb_gradient_layout.addWidget(self.blue_gradient)
+
+        self.rgb_gradient_widget = QWidget()
+        self.rgb_gradient_widget.setLayout(self.rgb_gradient_layout)
+
+        gradientForm_layout.addRow(QLabel("RGB Color"), self.rgb_gradient_widget)
+        self.updateGradientRGBVisibility(self.color_chooser_gradient.currentText())
 
         self.GradientBox.setLayout(gradientForm_layout)
 
@@ -1137,6 +1182,7 @@ class well_buttons(QWidget):#
         gradient_values = []
         gradient_color_values = []
         upper_level, lower_level = round(self.max_gradient.value()), round(self.min_gradient.value())
+        rgb_values_g = None
 
         if self.direction_chooser_gradient.currentIndex() in {0, 1}:
             gradient_step = (upper_level - lower_level) / (self.height_gradient.value() - 1)
@@ -1154,6 +1200,17 @@ class well_buttons(QWidget):#
         elif self.color_chooser_gradient.currentIndex() == 2:
             for i in range(len(gradient_values)):
                 gradient_color_values.append((0 ,0, gradient_values[i]))
+        
+        elif self.color_chooser_gradient.currentText() == "Multicolor":
+            red = self.red_gradient.value()
+            green = self.green_gradient.value()
+            blue = self.blue_gradient.value()
+
+            rgb_values_g = (red, green, blue)
+
+            for intensity in gradient_values:
+                gradient_color_values.append((round(intensity * red / 255), round(intensity * green / 255), round(intensity * blue / 255)))
+
 
         '''Creating grandient with positions'''
 
@@ -1183,34 +1240,46 @@ class well_buttons(QWidget):#
         if self.plate_nr == 0:
             gradient_wells_plate_1 = {}
             for well in self.gradientMatrix:
-                if well[1][0] != 0:
-                    button_color = (int(sqrt(well[1][0]) * 15.99), 0, 0)
-                elif well[1][1] != 0:
-                    button_color = (0, int(sqrt(well[1][1]) * 15.99), 0)
-                elif well[1][2] != 0:
-                    button_color = (0, 0, int(sqrt(well[1][2]) * 15.99))
-                else:
-                    button_color = (0, 0, 0)
+                # if well[1][0] != 0:
+                #     button_color = (int(sqrt(well[1][0]) * 15.99), 0, 0)
+                # elif well[1][1] != 0:
+                #     button_color = (0, int(sqrt(well[1][1]) * 15.99), 0)
+                # elif well[1][2] != 0:
+                #     button_color = (0, 0, int(sqrt(well[1][2]) * 15.99))
+                # else:
+                #     button_color = (0, 0, 0)
+                button_color = tuple(
+                    int(sqrt(channel) * 15.99)
+                    for channel in well[1]
+                )
+
                 gradient_wells_plate_1[self.Pos_to_Button[well[0]]] = {\
                         'waveType': 'const',\
                         'color': self.color_chooser_gradient.currentText(),\
                         'maxVal': max(well[1]),\
+                        'rgb_values': rgb_values_g,
                         'position': (0, well[0][0], well[0][1]),
                         'button_color': button_color,
                         'Icon': None}
         elif self.plate_nr == 1:
             gradient_wells_plate_2 = {}
             for well in self.gradientMatrix:
-                if well[1][0] != 0:
-                    button_color = (int(sqrt(well[1][0]) * 15.99), 0, 0)
-                elif well[1][1] != 0:
-                    button_color = (0, int(sqrt(well[1][1]) * 15.99), 0)
-                elif well[1][2] != 0:
-                    button_color = (0, 0, int(sqrt(well[1][2]) * 15.99))
+                # if well[1][0] != 0:
+                #     button_color = (int(sqrt(well[1][0]) * 15.99), 0, 0)
+                # elif well[1][1] != 0:
+                #     button_color = (0, int(sqrt(well[1][1]) * 15.99), 0)
+                # elif well[1][2] != 0:
+                #     button_color = (0, 0, int(sqrt(well[1][2]) * 15.99))
+                button_color = tuple(
+                    int(sqrt(channel) * 15.99)
+                    for channel in well[1]
+                )
+
                 gradient_wells_plate_2[self.Pos_to_Button[well[0]]] = {\
                         'waveType': 'const',\
                         'color': self.color_chooser_gradient.currentText(),\
                         'maxVal': max(well[1]),\
+                        'rgb_values': rgb_values_g,
                         'position': (1, well[0][0], well[0][1]),
                         'button_color': button_color,
                         'Icon': None}
