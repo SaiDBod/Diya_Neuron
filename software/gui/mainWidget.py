@@ -255,6 +255,10 @@ class well_buttons(QWidget):#
         self.direction_chooser_gradient.addItem("Bottom --> Top")
         self.direction_chooser_gradient.addItem("Left --> Right")
         self.direction_chooser_gradient.addItem("Right --> Left")
+        self.direction_chooser_gradient.addItem("Latin Top --> Bottom")
+        self.direction_chooser_gradient.addItem("Latin Bottom --> Top")
+        self.direction_chooser_gradient.addItem("Latin Left --> Right")
+        self.direction_chooser_gradient.addItem("Latin Right --> Left")
 
         self.max_gradient = QSpinBox()
         self.max_gradient.setMaximum(255)
@@ -1184,12 +1188,28 @@ class well_buttons(QWidget):#
         upper_level, lower_level = round(self.max_gradient.value()), round(self.min_gradient.value())
         rgb_values_g = None
 
-        if self.direction_chooser_gradient.currentIndex() in {0, 1}:
-            gradient_step = (upper_level - lower_level) / (self.height_gradient.value() - 1)
-            gradient_values = [round(lower_level + (gradient_step * x)) for x in range(self.height_gradient.value())]
+        # if self.direction_chooser_gradient.currentIndex() in {0, 1}:
+        #     gradient_step = (upper_level - lower_level) / (self.height_gradient.value() - 1)
+        #     gradient_values = [round(lower_level + (gradient_step * x)) for x in range(self.height_gradient.value())]
+        # else:
+        #     gradient_step = (upper_level - lower_level) / (self.width_gradient.value() - 1)
+        #     gradient_values = [round(lower_level + (gradient_step * x)) for x in range(self.width_gradient.value())]  
+
+        direction = self.direction_chooser_gradient.currentIndex()
+        height = self.height_gradient.value()
+        width = self.width_gradient.value()
+
+        if direction in {0, 1, 4, 5}:
+            n_levels = height
         else:
-            gradient_step = (upper_level - lower_level) / (self.width_gradient.value() - 1)
-            gradient_values = [round(lower_level + (gradient_step * x)) for x in range(self.width_gradient.value())]  
+            n_levels = width
+
+        gradient_step = (upper_level - lower_level) / (n_levels - 1)
+
+        gradient_values = [
+            round(lower_level + gradient_step * i)
+            for i in range(n_levels)
+]
 
         if self.color_chooser_gradient.currentIndex() == 0:
             for i in range(len(gradient_values)):
@@ -1212,28 +1232,99 @@ class well_buttons(QWidget):#
                 gradient_color_values.append((round(intensity * red / 255), round(intensity * green / 255), round(intensity * blue / 255)))
 
 
-        '''Creating grandient with positions'''
+        # '''Creating grandient with positions'''
+
+        # self.gradientMatrix = []
+
+        # if self.direction_chooser_gradient.currentIndex() in {0, 1}:
+        #     for y in range(self.height_gradient.value()):
+        #         y_pos = y + self.PosTL[0]
+        #         for x in range(self.width_gradient.value()):
+        #             x_pos = x + self.PosTL[1]
+        #             if self.direction_chooser_gradient.currentIndex() == 0:
+        #                 self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[-(y+1)])))
+        #             elif self.direction_chooser_gradient.currentIndex() == 1:
+        #                 self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[y])))
+        # else:
+        #     for y in range(self.height_gradient.value()):
+        #         y_pos = y + self.PosTL[0]
+        #         for x in range(self.width_gradient.value()):
+        #             x_pos = x + self.PosTL[1]
+        #             if self.direction_chooser_gradient.currentIndex() == 2:
+        #                 self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[-(x+1)])))
+        #             elif self.direction_chooser_gradient.currentIndex() == 3:
+        #                 self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[x])))
+
+        '''Creating gradient with positions'''
 
         self.gradientMatrix = []
 
-        if self.direction_chooser_gradient.currentIndex() in {0, 1}:
-            for y in range(self.height_gradient.value()):
+        height = self.height_gradient.value()
+        width = self.width_gradient.value()
+        direction = self.direction_chooser_gradient.currentIndex()
+
+        if direction in {4, 5, 6, 7}:
+            # Latin rectangle: one treatment per row/column position.
+            # The number of treatments must be at least the larger dimension.
+            n_treatments = max(height, width)
+
+            for y in range(height):
                 y_pos = y + self.PosTL[0]
-                for x in range(self.width_gradient.value()):
+
+                for x in range(width):
                     x_pos = x + self.PosTL[1]
-                    if self.direction_chooser_gradient.currentIndex() == 0:
-                        self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[-(y+1)])))
-                    elif self.direction_chooser_gradient.currentIndex() == 1:
-                        self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[y])))
+
+                    # Cyclic Latin treatment index
+                    if direction == 6:          # Latin Top --> Bottom
+                        treatment = (y + x) % width
+
+                    elif direction == 7:        # Latin Bottom --> Top
+                        treatment = (height - 1 - y + x) % width
+
+                    elif direction == 4:        # Latin Left --> Right
+                        treatment = (x + y) % height
+
+                    elif direction == 5:        # Latin Right --> Left
+                        treatment = (width - 1 - x + y) % height
+
+                    # Map treatment index to the existing intensity/color list
+                    color_index = min(
+                        treatment,
+                        len(gradient_color_values) - 1
+                    )
+
+                    self.gradientMatrix.append(
+                        ((y_pos, x_pos), gradient_color_values[color_index])
+                    )
+
         else:
-            for y in range(self.height_gradient.value()):
-                y_pos = y + self.PosTL[0]
-                for x in range(self.width_gradient.value()):
-                    x_pos = x + self.PosTL[1]
-                    if self.direction_chooser_gradient.currentIndex() == 2:
-                        self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[-(x+1)])))
-                    elif self.direction_chooser_gradient.currentIndex() == 3:
-                        self.gradientMatrix.append(((y_pos, x_pos) , (gradient_color_values[x])))
+            # Original gradient behavior — unchanged
+            if direction in {0, 1}:
+                for y in range(height):
+                    y_pos = y + self.PosTL[0]
+                    for x in range(width):
+                        x_pos = x + self.PosTL[1]
+                        if direction == 0:
+                            self.gradientMatrix.append(
+                                ((y_pos, x_pos), gradient_color_values[-(y + 1)])
+                            )
+                        elif direction == 1:
+                            self.gradientMatrix.append(
+                                ((y_pos, x_pos), gradient_color_values[y])
+                            )
+            else:
+                for y in range(height):
+                    y_pos = y + self.PosTL[0]
+                    for x in range(width):
+                        x_pos = x + self.PosTL[1]
+                        if direction == 2:
+                            self.gradientMatrix.append(
+                                ((y_pos, x_pos), gradient_color_values[-(x + 1)])
+                            )
+                        elif direction == 3:
+                            self.gradientMatrix.append(
+                                ((y_pos, x_pos), gradient_color_values[x])
+                            )
 
         ''' Gradient to enlighted wells'''
 
